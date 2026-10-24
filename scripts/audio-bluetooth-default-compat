@@ -22,5 +22,5 @@ fi
 params=$(jq -cn --arg direction "$direction" --argjson id "$node_id" \
   --arg name "$node_name" --arg previous "$previous" \
   '{direction:$direction,id:$id,name:$name,previous:$previous}')
-"$script_dir/../bin/omarchy-audio-service" --socket "$socket" \
+"$script_dir/audio-service" --socket "$socket" \
   --request default.compat "$params" >/dev/null

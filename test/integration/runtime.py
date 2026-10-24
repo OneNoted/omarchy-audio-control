@@ -154,12 +154,47 @@ assert len(sys.stdin.buffer.read()) > 0
         assert failure['error']['code'] == 'invalid_store' and settings.read_text() == '{broken'
         settings.write_text('{"version":1,"outputOverdrive":false}')
         a.wait_state(lambda s: 'settings' not in s['storeErrors'])
+        b.request('settings.set', dict(key='outputOverdrive', value=True))
+        a.wait_state(lambda s: s['stores']['settings']['outputOverdrive'] is True)
+        backup = settings.with_suffix('.backup')
+        settings.rename(backup)
+        a.wait_state(lambda s: s['stores']['settings']['outputOverdrive'] is False)
+        backup.rename(settings)
+        a.wait_state(lambda s: s['stores']['settings']['outputOverdrive'] is True)
+        b.request('settings.set', dict(key='outputOverdrive', value=False))
+        print('PASS: moving a store away resets its state; moving it back reloads it', flush=True)
         scene = dict(name='Privacy', devices=[dict(name='audio_test_output',direction='output',volume=.4,balance=.5,muted=True)])
         result = b.request('scene.apply',dict(scene=scene))
         assert result['applied'] == 1 and not result['errors'], result
         captured = b.request('scene.capture',dict(name='Captured'))
         device = next(d for d in captured['devices'] if d['name'] == 'audio_test_output')
         assert device['muted'] is False and abs(device['balance']-.5)<.02, device
+        # Each command fits one frame, while the resulting valid store needs
+        # snapshot chunks. Saving/deleting must acknowledge without echoing it.
+        large_scene = dict(
+            devices=[dict(name=('output_'+str(i)+'_').ljust(160, 'x'),
+                          direction='output', volume=.5) for i in range(64)],
+            ports=[dict(endpoint=('output_'+str(i)+'_').ljust(160, 'x'),
+                        value=('port_'+str(i)+'_').ljust(160, 'p'),
+                        direction='output') for i in range(64)],
+            profiles=[dict(card=('card_'+str(i)+'_').ljust(160, 'c'),
+                           profile=('profile_'+str(i)+'_').ljust(160, 'p')) for i in range(64)])
+        for i in range(6):
+            assert b.request('scenes.save', dict(name='Large '+str(i), scene=large_scene)) == dict(outcome='applied')
+            a.wait_state(lambda s: len(s['stores']['scenes']['scenes']) == i+1)
+        assert len(json.dumps(a.state['stores']['scenes'])) > 262144
+        assert a.state['stores']['scenes']['scenes'][-1]['profiles'] == large_scene['profiles']
+        assert b.request('scenes.delete', dict(name='Large 0')) == dict(outcome='applied')
+        a.wait_state(lambda s: len(s['stores']['scenes']['scenes']) == 5)
+        assert len(json.dumps(a.state['stores']['scenes'])) > 262144
+        reply = b.response(b.send('store.read', dict(store='scenes')))
+        assert reply['error']['code'] == 'response_too_large', reply
+        assert b.request('health')['status'] == 'ok', 'Large store reads must preserve the connection'
+        for i in range(1, 6):
+            b.request('scenes.delete', dict(name='Large '+str(i)))
+            a.wait_state(lambda s: len(s['stores']['scenes']['scenes']) == 5-i)
+        assert b.request('store.read', dict(store='scenes')) == dict(version=1, scenes=[])
+        print('PASS: large scene saves/deletes use bounded replies and complete chunked snapshots', flush=True)
         # A private source identity exercises job ownership with fake sample
         # producers. No real microphone or speaker is opened by this test.
         source = next(n for n in a.state['nodes'] if n['name'] == 'audio_test_input')

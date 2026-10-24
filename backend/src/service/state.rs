@@ -1,7 +1,7 @@
 //! Snapshot publication and persisted-store observation.
 use super::{Busy, Service};
 use crate::native;
-use crate::protocol::{Failure, Request, Result};
+use crate::protocol::{self, Failure, MAX_FRAME_BYTES, Request, Response, Result};
 use crate::storage::{self, Kind};
 use serde_json::{Value, json};
 use std::sync::Arc;
@@ -168,8 +168,8 @@ impl Service {
         };
         self.set_busy(true);
         let _busy = Busy(self);
-        let request = request.clone();
-        let result = tokio::task::spawn_blocking(move || storage.handle(&request))
+        let command = request.clone();
+        let result = tokio::task::spawn_blocking(move || storage.handle(&command))
             .await
             .map_err(|_| Failure::unknown("Store operation stopped unexpectedly"))?;
         self.reload_stores().await?;
@@ -185,6 +185,20 @@ impl Service {
                 .await;
             }
         }
-        result?.ok_or_else(|| Failure::new("method_not_found", "Unknown store method"))
+        let value =
+            result?.ok_or_else(|| Failure::new("method_not_found", "Unknown store method"))?;
+        // Stores can exceed a single response frame. Subscribers receive the
+        // updated document through bounded snapshot chunks before completion.
+        if request.method != "store.read" {
+            return Ok(json!({"outcome": "applied"}));
+        }
+        let response = Response::new(Some(&request.id), Ok(value.clone()));
+        if protocol::encode(&response)?.len() + 1 > MAX_FRAME_BYTES {
+            return Err(Failure::new(
+                "response_too_large",
+                "Audio store is too large for one reply; use state.subscribe",
+            ));
+        }
+        Ok(value)
     }
 }

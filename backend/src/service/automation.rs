@@ -68,7 +68,9 @@ impl Service {
                     continue;
                 }
                 let next = crate::automation::signature(&graph, &snapshot["stores"]["rules"]);
-                if next == signature {
+                let next_groups =
+                    crate::automation::group_signature(&graph, &snapshot["stores"]["rules"]);
+                if next == signature && next_groups == groups {
                     continue;
                 }
                 let _transaction = service.mutation.lock().await;

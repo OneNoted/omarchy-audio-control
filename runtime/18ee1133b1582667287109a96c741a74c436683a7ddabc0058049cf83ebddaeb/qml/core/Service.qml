@@ -36,6 +36,9 @@ Item {
   property var client: null
   property bool destroying: false
 
+  // The quick mixer and advanced window share one audio control session.
+  signal quickPanelOpened()
+
   // Capture events belong to the shared service, not each monitor's panel.
   readonly property bool captureNotifications: !stores.settings || stores.settings.captureNotifications !== false
   property bool notificationsAvailable: false

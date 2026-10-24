@@ -42,6 +42,7 @@ impl Watcher {
                     path.as_ptr(),
                     libc::IN_CLOSE_WRITE
                         | libc::IN_MOVED_TO
+                        | libc::IN_MOVED_FROM
                         | libc::IN_DELETE
                         | libc::IN_CREATE
                         | libc::IN_DELETE_SELF

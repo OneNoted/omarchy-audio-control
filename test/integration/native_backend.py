@@ -89,6 +89,37 @@ class NativeBackendTests(unittest.TestCase):
         self.assertNotIn(bundled, self.inspected)
         self.assertEqual(bundled.read_bytes(), original)
 
+    def test_bluetooth_helpers_use_native_launcher(self):
+        scripts = self.root/'scripts'
+        scripts.mkdir()
+        for name in ('audio-bluetooth-default-compat', 'audio-output-set-default', 'audio-input-set-default'):
+            helper = scripts/name
+            helper.write_bytes((ROOT/'scripts'/name).read_bytes())
+            helper.chmod(0o755)
+        # A foreign bundled ELF must never be executed, even by compatibility
+        # helpers after the UI has already prepared its cached native backend.
+        self.write_binary(self.root/'bin/omarchy-audio-service', 'x86_64')
+        native_launcher = scripts/'audio-service'
+        native_launcher.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$AUDIO_NATIVE_ARGUMENTS"\n')
+        native_launcher.chmod(0o755)
+        build_id = self.source_id(self.root)
+        (self.root/'backend-release.json').write_text(json.dumps(dict(buildId=build_id)))
+        arguments = self.root/'arguments'
+        env = dict(os.environ, XDG_RUNTIME_DIR=self.temporary.name,
+                   AUDIO_NATIVE_ARGUMENTS=str(arguments))
+        for direction in ('output', 'input'):
+            with self.subTest(direction=direction):
+                run_process([str(scripts/('audio-'+direction+'-set-default')), '42',
+                             'Endpoint with spaces', 'Previous endpoint'],
+                            env=env, check=True, capture_output=True, text=True)
+                socket_flag, socket, request_flag, method, params = arguments.read_text().splitlines()
+                self.assertEqual((socket_flag, request_flag, method),
+                                 ('--socket', '--request', 'default.compat'))
+                self.assertEqual(socket, str(Path(self.temporary.name)/'omarchy-audio-control'/
+                                             ('backend-'+build_id[:24]+'.sock')))
+                self.assertEqual(json.loads(params), dict(direction=direction, id=42,
+                    name='Endpoint with spaces', previous='Previous endpoint'))
+
     def test_plugin_update_rebuilds_for_the_new_identity(self):
         old = self.prepare()
         self.source.write_text('release two with changed QML')
