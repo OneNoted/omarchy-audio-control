@@ -364,6 +364,12 @@ Item {
     target: root.service
     function onProfilesChanged() { root.refreshDeviceCatalog() }
     function onPortsChanged() { root.refreshDeviceCatalog() }
+    function onQuickPanelOpened() {
+      // A quick-panel summon can arrive through this window's proxy. Close
+      // only the advanced surface, without toggling the newly opened mixer.
+      root.quickPanelProxyOpen = false
+      root.close()
+    }
   }
 
   function policyToggleAtCursor() {

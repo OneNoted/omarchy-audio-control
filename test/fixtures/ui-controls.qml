@@ -80,7 +80,14 @@ Item {
         if (!root.check(root.managedRows().length === 0, "unused routing tab created device rows")) return
         root.advanced.newOutputGroupName = "Unfinished group"
         root.advanced.selectTab(4)
+        var advancedWindow = root.descendants(root.advanced).find(function(item) {
+          return item.title === "Advanced Audio Control"
+        })
+        if (!root.check(!!advancedWindow, "Advanced window missing")) return
+        advancedWindow.visible = true
         root.panel.open()
+        if (!root.check(!root.advanced.opened && root.panel.opened,
+            "Opening the mixer left the advanced window active")) return
         root.phase++
         break
       case 1:

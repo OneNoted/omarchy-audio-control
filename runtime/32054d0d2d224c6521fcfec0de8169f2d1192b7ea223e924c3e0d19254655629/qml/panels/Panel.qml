@@ -604,6 +604,8 @@ Panel {
 
   onOpenedChanged: {
     if (opened) {
+      if (audioService && typeof audioService.quickPanelOpened === "function")
+        audioService.quickPanelOpened()
       if (appLibrary && typeof appLibrary.refreshIcons === "function") appLibrary.refreshIcons()
       // Populate through the debounced refresh: assigning the display models
       // synchronously inside this signal regenerates every Repeater while

@@ -80,10 +80,10 @@ with tempfile.TemporaryDirectory(prefix='audio-groups-') as temporary, ExitStack
             'device.class=sound priority.session=2000',
             '--playback-props=target.object=audio_test_output node.name='+name+'_render'])
 
-    def player_sink():
+    def player_sink(app='Group Test Player'):
         streams = json.loads(run('pactl', '-f', 'json', 'list', 'sink-inputs'))
         return next((s['sink'] for s in streams
-                     if s['properties'].get('application.name') == 'Group Test Player'), None)
+                     if s['properties'].get('application.name') == app), None)
 
     def group_inputs(group_name):
         group = next(s for s in sinks() if s['name'] == group_name)
@@ -270,6 +270,44 @@ with tempfile.TemporaryDirectory(prefix='audio-groups-') as temporary, ExitStack
         assert group_name not in final_rules['devices']['aliases']
         assert group_name not in final_rules['devices']['favorites']
         assert group_name not in final_rules['devices']['hidden']
+
+        for use in ('default', 'stream'):
+            deferred_id = until(lambda: change('create', name='Deferred cleanup',
+                members=['audio_test_left', 'audio_test_right']))
+            deferred_name = 'omarchy_audio_group_'+deferred_id
+            deferred_sink = until(lambda: next((s for s in sinks() if s['name'] == deferred_name), None))
+            if use == 'default':
+                run('pactl', 'set-default-sink', deferred_name)
+                until(lambda: run('pactl', 'get-default-sink').strip() == deferred_name)
+            else:
+                pinned = launch(['pw-play', '--raw', '--rate=48000', '--channels=2', '--format=s16',
+                    '--target='+deferred_name,
+                    '--properties=application.name="Orphan Test Player" node.name=audio_test_orphan_player',
+                    '-'], stdin=zero)
+                until(lambda: player_sink('Orphan Test Player') == deferred_sink['index'])
+            # External edits and Bluetooth forget can remove a definition while
+            # the module is in use. The first cleanup must leave playback alone.
+            rules_path.write_text(json.dumps(final_rules))
+            client.wait_state(lambda s: s['stores']['rules']['outputGroups'] == [])
+            time.sleep(1.5)
+            assert any(s['name'] == deferred_name for s in sinks())
+            if use == 'default':
+                run('pactl', 'set-default-sink', 'audio_test_left')
+                until(lambda: run('pactl', 'get-default-sink').strip() == 'audio_test_left')
+            else:
+                client.request('health')
+                stream = next(n for n in client.state['nodes'] if n['name'] == 'audio_test_orphan_player')
+                target = next(n for n in client.state['nodes'] if n['name'] == 'audio_test_right')
+                def identity(node):
+                    return dict(generation=client.state['generation'], id=node['id'], serial=node['serial'])
+                client.request('route.set', dict(identity=identity(stream), target=identity(target), mode='override'))
+                until(lambda: player_sink('Orphan Test Player') == next(s['index'] for s in sinks()
+                    if s['name'] == 'audio_test_right'))
+            until(lambda: all(s['name'] != deferred_name for s in sinks()))
+            if use == 'stream':
+                assert pinned.poll() is None, 'Cleanup stopped the rerouted player'
+                stop(pinned)
+        print('PASS: orphan cleanup retries after default changes and stream moves without replacing nodes', flush=True)
 
         foreign_id = 'ffffffffffffffff'
         foreign_name = 'omarchy_audio_group_'+foreign_id

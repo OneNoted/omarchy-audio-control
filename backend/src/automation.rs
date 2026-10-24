@@ -58,7 +58,24 @@ pub fn group_signature(graph: &Graph, rules: &Value) -> String {
         })
         .map(|n| json!([n.id, n.serial, n.name, !n.state.is_empty()]))
         .collect();
-    json!([graph.generation, nodes, rules["outputGroups"]]).to_string()
+    // An orphan may still be the default or have applications linked to it.
+    // Reconsider deferred removal when its use changes without replacing nodes.
+    let default = crate::routing::default_name(graph, crate::routing::Direction::Playback);
+    let usage: Vec<_> = graph
+        .nodes
+        .values()
+        .filter(|n| storage::group_sink(&n.name))
+        .map(|n| {
+            let consumers: Vec<_> = graph
+                .links
+                .values()
+                .filter(|l| l.input_node == n.id && matches!(l.state.as_str(), "Active" | "Paused"))
+                .map(|l| l.output_node)
+                .collect();
+            json!([n.id, default.as_deref() == Some(&n.name), consumers])
+        })
+        .collect();
+    json!([graph.generation, nodes, rules["outputGroups"], usage]).to_string()
 }
 pub fn routes(graph: &Graph, rules: &Value) -> Vec<(String, crate::routing::Set)> {
     let mut result = Vec::new();
