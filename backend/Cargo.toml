@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT"
-description = "Rust control service for Advanced Audio Control"
+description = "Rust control service for Notes Audio Control"
 
 [profile.release]
 lto = "thin"
