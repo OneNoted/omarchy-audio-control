@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "ssupt.audio-control",
-  "name": "Advanced Audio Control",
+  "id": "onenoted.audio-control",
+  "name": "Notes Audio Control",
   "version": "0.9.1",
-  "author": "ssupt",
+  "author": "OneNoted (fork of ssupt)",
   "description": "Advanced PipeWire and WirePlumber audio mixer for Omarchy: devices, multi-output groups, Bluetooth codecs, safety policies, microphone privacy, audio scenes, persistent routing rules, graph and service diagnostics, channel tests, support reports, and guarded recovery",
   "kinds": [
     "bar-widget",
@@ -11,12 +11,12 @@
     "service"
   ],
   "entryPoints": {
-    "barWidget": "runtime/18ee1133b1582667287109a96c741a74c436683a7ddabc0058049cf83ebddaeb/qml/panels/Panel.qml",
-    "panel": "runtime/18ee1133b1582667287109a96c741a74c436683a7ddabc0058049cf83ebddaeb/qml/panels/AdvancedAudio.qml",
-    "service": "runtime/18ee1133b1582667287109a96c741a74c436683a7ddabc0058049cf83ebddaeb/qml/core/Service.qml"
+    "barWidget": "runtime/81f964c02e5f992975b6a73caef38433b7fce2b879ca109d4a51bbf1881725dc/qml/panels/Panel.qml",
+    "panel": "runtime/81f964c02e5f992975b6a73caef38433b7fce2b879ca109d4a51bbf1881725dc/qml/panels/AdvancedAudio.qml",
+    "service": "runtime/81f964c02e5f992975b6a73caef38433b7fce2b879ca109d4a51bbf1881725dc/qml/core/Service.qml"
   },
   "barWidget": {
-    "displayName": "Advanced Audio Control",
+    "displayName": "Notes Audio Control",
     "description": "Advanced PipeWire and WirePlumber audio mixer for Omarchy: devices, multi-output groups, Bluetooth codecs, safety policies, microphone privacy, audio scenes, persistent routing rules, graph and service diagnostics, channel tests, support reports, and guarded recovery",
     "category": "Audio",
     "allowMultiple": false

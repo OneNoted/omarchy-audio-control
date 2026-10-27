@@ -370,7 +370,7 @@ const classified = model.classifyAudioNodes([
     isSink: true,
     ready: true,
     properties: {
-      'application.id': 'ssupt.audio-control',
+      'application.id': 'onenoted.audio-control',
       'node.virtual': 'true',
       'omarchy.audio.group.id': '0123456789abcdef'
     }
@@ -391,7 +391,7 @@ const classified = model.classifyAudioNodes([
   { name: 'omarchy_audio_test_record', isStream: true, isSink: false },
   {
     name: 'speaker-test', isStream: true, isSink: true, ready: true,
-    properties: { 'application.id': 'ssupt.audio-control' }
+    properties: { 'application.id': 'onenoted.audio-control' }
   }
 ])
 assert.deepEqual(classified.sinks.map(node => node.name), [
@@ -521,7 +521,7 @@ assert.equal(model.isManagedOutputGroupSink({
   isSink: true,
   ready: true,
   properties: {
-    'application.id': 'ssupt.audio-control',
+    'application.id': 'onenoted.audio-control',
     'node.virtual': true,
     'omarchy.audio.group.id': '0123456789abcdef'
   }
@@ -532,7 +532,7 @@ assert.equal(model.isManagedOutputGroupSink({
   isSink: true,
   ready: true,
   properties: {
-    'application.id': 'ssupt.audio-control',
+    'application.id': 'onenoted.audio-control',
     'node.virtual': true,
     'omarchy.audio.group.id': 'fedcba9876543210'
   }
@@ -685,7 +685,7 @@ AUDIO_CONTROL_DIAGNOSTIC_SINK_FIXTURE="$diagnostics_fixture/sinks.json" \
   AUDIO_CONTROL_SPEAKER_TEST_LOG="$speaker_log" \
   PATH="$TEST_DIR/mocks:$PATH" "$ROOT/scripts/audio-speaker-test" bluez_output.test
 grep -q '^sink=bluez_output.test$' "$speaker_log" || fail "speaker test target"
-grep -q 'application.id=ssupt.audio-control' "$speaker_log" || fail "speaker test private identity"
+grep -q 'application.id=onenoted.audio-control' "$speaker_log" || fail "speaker test private identity"
 grep -q '^args=-D pulse -c 2 -t wav -l 1 -S 35$' "$speaker_log" ||
   fail "speaker test guarded channel pass"
 if AUDIO_CONTROL_DIAGNOSTIC_SINK_FIXTURE="$diagnostics_fixture/sinks.json" \
@@ -881,7 +881,7 @@ const parsed = JSON.parse(raw.replace(/^\s*\/\/[^\n]*(\n|$)/gm, '').replace(/,(\
 assert.equal(parsed['personal.notes'].label, 'Notes')
 assert.equal(parsed['setup.audio'].label, 'Audio')
 assert.equal(parsed['setup.audio'].action,
-  'omarchy-shell shell summon ssupt.audio-control \'{"view":"advanced"}\'')
+  'omarchy-shell shell summon onenoted.audio-control \'{"view":"advanced"}\'')
 assert.equal((raw.match(/"setup\.audio"/g) || []).length, 1)
 JS
 
@@ -943,9 +943,9 @@ echo "PASS: menu integration"
 
 jq -e '
   .schemaVersion == 1
-  and .id == "ssupt.audio-control"
+  and .id == "onenoted.audio-control"
   and (.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"))
-  and .author == "ssupt"
+  and .author == "OneNoted (fork of ssupt)"
   and (.kinds | index("bar-widget") != null)
   and (.kinds | index("panel") != null)
   and (.kinds | index("service") != null)

@@ -81,7 +81,7 @@ Item {
         root.advanced.newOutputGroupName = "Unfinished group"
         root.advanced.selectTab(4)
         var advancedWindow = root.descendants(root.advanced).find(function(item) {
-          return item.title === "Advanced Audio Control"
+          return item.title === "Notes Audio Control"
         })
         if (!root.check(!!advancedWindow, "Advanced window missing")) return
         advancedWindow.visible = true

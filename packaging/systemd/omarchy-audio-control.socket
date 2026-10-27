@@ -1,5 +1,5 @@
 [Unit]
-Description=Advanced Audio Control backend socket
+Description=Notes Audio Control backend socket
 
 [Socket]
 ListenStream=%t/omarchy-audio-control/backend.sock

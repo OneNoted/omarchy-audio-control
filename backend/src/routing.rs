@@ -75,7 +75,7 @@ fn internal(node: &Node) -> bool {
         || node
             .properties
             .get("application.id")
-            .is_some_and(|v| v == "ssupt.audio-control")
+            .is_some_and(|v| v == "onenoted.audio-control")
 }
 fn monitor(node: &Node) -> bool {
     class(node) == "Stream/Input/Audio"
@@ -618,7 +618,7 @@ mod tests {
         group.name = "omarchy_audio_group_0123456789abcdef".into();
         group
             .properties
-            .insert("application.id".into(), "ssupt.audio-control".into());
+            .insert("application.id".into(), "onenoted.audio-control".into());
         assert_eq!(endpoint_direction(&group), Some(Direction::Playback));
         group
             .properties

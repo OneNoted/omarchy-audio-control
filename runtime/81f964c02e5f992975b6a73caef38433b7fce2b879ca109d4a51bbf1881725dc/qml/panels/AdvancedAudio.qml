@@ -204,17 +204,14 @@ Item {
           ? deviceItemCount + (inputDevice ? 1 : 0)
           : (activeTab === 1 ? 2 + bluetoothCards.length : policyItemCount))))
   readonly property bool audioMutationBusy: graphMutationBusy || diagnosticsMutationBusy
-  onAudioMutationBusyChanged: if (!audioMutationBusy) enforceOutputVolumeLimit()
-  onOutputOverdriveChanged: enforceOutputVolumeLimit()
   readonly property bool policyMutationBlocked: sceneController.busy
     || profileSetPending || portSetPending || microphoneTest.busy
     || diagnosticsMutationBusy
   readonly property color hoverFill: Style.hoverFillFor(foreground, Commons.Color.accent)
-  onOutputDeviceChanged: enforceOutputVolumeLimit()
 
   function pluginId() {
     var id = manifest && typeof manifest.id === "string" ? String(manifest.id) : ""
-    return id !== "" ? id : "ssupt.audio-control"
+    return id !== "" ? id : "onenoted.audio-control"
   }
 
   function toggleQuickPanel() {
@@ -292,7 +289,7 @@ Item {
     profileMenuCount = 0
     recoveryConfirmOpen = false
     microphoneTest.discard()
-    if (shell && typeof shell.hide === "function") shell.hide("ssupt.audio-control")
+    if (shell && typeof shell.hide === "function") shell.hide("onenoted.audio-control")
     else window.visible = false
   }
 
@@ -344,13 +341,6 @@ Item {
     }
   }
 
-  function enforceOutputVolumeLimit() {
-    if (outputOverdrive || audioMutationBusy || !mutableAudioNode(outputDevice)) return
-    try {
-      var volume = Number(outputDevice.audio.volume)
-      if (isFinite(volume) && volume > 1) service.changeNode(outputDevice, { volume: 1 })
-    } catch (_error) { }
-  }
 
   function refreshDeviceCatalog() {
     if (profileMenuOpen) return
@@ -962,7 +952,7 @@ Item {
 
   FloatingWindow {
     id: window
-    title: "Advanced Audio Control"
+    title: "Notes Audio Control"
     visible: false
     color: root.background
     implicitWidth: 680
@@ -972,7 +962,7 @@ Item {
     onVisibleChanged: {
       if (!visible && !root.closingFromHost) {
         if (root.shell && typeof root.shell.hide === "function")
-          root.shell.hide("ssupt.audio-control")
+          root.shell.hide("onenoted.audio-control")
       }
     }
 

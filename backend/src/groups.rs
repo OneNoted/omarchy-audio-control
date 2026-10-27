@@ -15,7 +15,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-const OWNER: &str = "ssupt.audio-control";
+const OWNER: &str = "onenoted.audio-control";
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Group {
@@ -548,7 +548,7 @@ mod tests {
         assert!(!module_owned(
             &group
                 .arguments()
-                .replace(OWNER, "ssupt.audio-control.foreign"),
+                .replace(OWNER, "onenoted.audio-control.foreign"),
             &group
         ));
         assert!(!module_owned(

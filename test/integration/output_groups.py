@@ -328,7 +328,7 @@ with tempfile.TemporaryDirectory(prefix='audio-groups-') as temporary, ExitStack
         orphan_name = 'omarchy_audio_group_'+orphan_id
         run('pactl', 'load-module', 'module-combine-sink', 'sink_name='+orphan_name,
             'sinks=audio_test_left,audio_test_right',
-            'sink_properties=device.description=Omarchy_Output_Group application.id=ssupt.audio-control '
+            'sink_properties=device.description=Omarchy_Output_Group application.id=onenoted.audio-control '
             'node.virtual=true omarchy.audio.group.id='+orphan_id, 'latency_compensate=true')
         until(lambda: all(s['name'] != orphan_name for s in sinks()))
         assert json.loads(rules_path.read_text())['outputGroups'] == []

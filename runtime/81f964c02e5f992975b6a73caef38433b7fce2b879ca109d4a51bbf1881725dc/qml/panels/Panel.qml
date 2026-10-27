@@ -22,7 +22,7 @@ Panel {
 
   property var service: null
   readonly property var audioService: service ? service : bar && bar.shell
-    ? bar.shell.serviceFor("ssupt.audio-control") : null
+    ? bar.shell.serviceFor("onenoted.audio-control") : null
   readonly property var nodes: Pipewire.nodes ? Pipewire.nodes.values : []
   readonly property var sink: Pipewire.defaultAudioSink
   readonly property var rawSource: Pipewire.defaultAudioSource
@@ -67,12 +67,10 @@ Panel {
   property real inputPeakHold: 0
   property bool inputClipping: false
   readonly property real outputVolumeMaximum: outputOverdrive ? 1.5 : 1.0
-  onOutputOverdriveChanged: enforceOutputVolumeLimit()
 
   readonly property var candidateSinks: rulesStore.sinks
   readonly property var candidateSources: rulesStore.sources
   readonly property var candidateStreams: rulesStore.playbackStreams
-  onCandidateStreamsChanged: enforceOutputVolumeLimit()
   readonly property var candidateRecordingStreams: rulesStore.recordingStreams
 
   readonly property var sinkAvailability: audioService && audioService.ready
@@ -264,8 +262,6 @@ Panel {
     || pendingStreamRoute !== null || rulesStore.busy || outputGroups.busy
   readonly property bool directDeviceMutationBusy: !audioService || !audioService.ready || audioService.transactionBusy || sceneController.busy
     || defaultSetPending
-  onDirectDeviceMutationBusyChanged: if (!directDeviceMutationBusy)
-    enforceOutputVolumeLimit()
   readonly property bool sceneMutationBusy: sceneController.busy || routeMutationBusy
     || streamOutputMenuOpen
 
@@ -305,7 +301,6 @@ Panel {
   // The shared native graph resolves the selected DSP output to its hardware.
   readonly property var volumeSink: Model.outputVolumeNode(nodes, sink,
     audioService && audioService.ready ? audioService.outputs : null)
-  onVolumeSinkChanged: enforceOutputVolumeLimit()
 
   // Carry sub-notch touchpad deltas between wheel events.
   property real wheelAccumulator: 0
@@ -405,13 +400,10 @@ Panel {
   // "header" is a virtual horizontal section for advanced settings + mute.
   readonly property bool settingsHeaderHasCursor: cursorActive && focusSection === "header" && headerIndex === 0
   readonly property bool powerHeaderHasCursor: cursorActive && focusSection === "header" && headerIndex === 1
-  // Only channels that actually exist get a vote. A box with no default source
-  // would otherwise report "input unmuted" forever, leaving the hero switch
-  // able to mute but never to unmute.
+  // The output switch never changes microphone mute. Mic controls are separate.
   readonly property bool hasOutput: mutableAudioNode(volumeSink)
   readonly property bool hasInput: mutableAudioNode(source)
-  readonly property bool anyAudible: (hasOutput && !outputMuted) || (hasInput && !inputMuted)
-  readonly property string toggleHint: anyAudible ? "Mute" : "Unmute"
+  readonly property string toggleHint: outputMuted ? "Unmute output" : "Mute output"
 
   readonly property color hoverFill: bar
     ? Style.hoverFillFor(bar.foreground, Commons.Color.accent)
@@ -550,7 +542,7 @@ Panel {
   function activateCursor() {
     if (focusSection === "header") {
       if (headerIndex === 0) openAdvancedAudio()
-      else toggleAllMuted()
+      else toggleOutputMute()
       return
     }
     if (focusSection === "scenes") {
@@ -591,10 +583,10 @@ Panel {
   function openAdvancedAudio() {
     controller.hide()
     if (bar && bar.shell && typeof bar.shell.summon === "function")
-      bar.shell.summon("ssupt.audio-control", '{"view":"advanced"}')
+      bar.shell.summon("onenoted.audio-control", '{"view":"advanced"}')
     else
       Quickshell.execDetached([
-        "omarchy-shell", "shell", "summon", "ssupt.audio-control", '{"view":"advanced"}'
+        "omarchy-shell", "shell", "summon", "onenoted.audio-control", '{"view":"advanced"}'
       ])
   }
 
@@ -840,14 +832,6 @@ Panel {
     return setAudioNodeVolume(volumeSink, volume, outputVolumeMaximum) ? volume : outputVolume
   }
 
-  function enforceOutputVolumeLimit() {
-    if (outputOverdrive || directDeviceMutationBusy) return
-    if (outputVolume > 1) setOutputVolume(1)
-    for (var i = 0; i < candidateStreams.length; i++) {
-      var stream = candidateStreams[i]
-      if (audioNodeVolume(stream) > 1) setAudioNodeVolume(stream, 1, 1)
-    }
-  }
 
 
   function showVolumeOsd(volume) {
@@ -879,21 +863,6 @@ Panel {
       return rejectAudioAction("Audio is applying another change; retry in a moment")
     if (!toggleAudioNodeMute(source))
       return rejectAudioAction("That microphone just changed; retry in a moment")
-    clearInteractionError()
-  }
-
-  // The hero switch is the whole panel's on/off, so it carries both channels
-  // at once. It reads as on while anything is still audible, which keeps
-  // muting a single channel from the row below flipping the master switch.
-  function toggleAllMuted() {
-    if (directDeviceMutationBusy) {
-      return rejectAudioAction("Audio is applying another change; retry in a moment")
-    }
-    var mute = anyAudible
-    var outputOk = !hasOutput || setAudioNodeMuted(volumeSink, mute)
-    var inputOk = !hasInput || setAudioNodeMuted(source, mute)
-    if (!outputOk || !inputOk)
-      return rejectAudioAction("An audio device just changed; check its mute state and retry")
     clearInteractionError()
   }
 
@@ -1131,7 +1100,7 @@ Panel {
       }
     }
     onPressed: function(b) {
-      if (b === Qt.RightButton) root.toggleAllMuted()
+      if (b === Qt.RightButton) root.toggleOutputMute()
       else if (b === Qt.MiddleButton) root.toggleInputMute()
       else root.toggle()
     }
@@ -1261,16 +1230,15 @@ Panel {
                 onClicked: root.openAdvancedAudio()
               }
 
-              // Checked means something is still audible, so muting everything
-              // reads as switching audio off.
               ToggleSwitch {
                 id: powerSwitch
-                checked: root.anyAudible
+                checked: root.hasOutput && !root.outputMuted
+                enabled: root.hasOutput && !root.directDeviceMutationBusy
                 hasCursor: root.powerHeaderHasCursor
                 foreground: root.bar.foreground
                 anchors.verticalCenter: parent.verticalCenter
                 onHovered: function(on) { if (on) root.setHeaderCursor(1) }
-                onToggled: root.toggleAllMuted()
+                onToggled: root.toggleOutputMute()
 
                 PanelToolTip {
                   visible: powerSwitch.containsMouse

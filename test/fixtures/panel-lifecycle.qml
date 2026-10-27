@@ -61,7 +61,7 @@ ShellRoot {
     advanced = create("qml/panels/AdvancedAudio.qml", { service: service, shell: host })
     if (!advanced) return
     advancedWindow = descendants(advanced).find(function(item) {
-      return item.title === "Advanced Audio Control"
+      return item.title === "Notes Audio Control"
     })
     if (!check(!!advancedWindow, "Advanced window missing")) return
     advanced.activeTab = 1
@@ -84,7 +84,7 @@ ShellRoot {
             "Advanced window and menu did not open")) return
         // A stale proxy flag must not close the mixer that is replacing it.
         root.advanced.quickPanelProxyOpen = true
-        testBar.summonBarWidget("ssupt.audio-control")
+        testBar.summonBarWidget("onenoted.audio-control")
       } else if (root.phase === 2) {
         if (!root.check(root.mixerOpen && !root.advanced.opened
             && !root.dropdown.popupOpen && root.advanced.profileMenuCount === 0

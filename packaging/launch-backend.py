@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Prepare a backend for this CPU without changing the installed plugin."""
 import fcntl
+import hashlib
 import importlib.util
 import json
 import os
@@ -66,8 +67,30 @@ def prepare(root, machine=None, cache_home=None):
     tools = release_tools(root)
     build_id = tools.source_id(root)
     bundled = root/'bin/omarchy-audio-service'
-    if matches(bundled, target, elf_machine, build_id, tools):
-        return bundled
+    if os.path.lexists(bundled):
+        try:
+            descriptor = os.open(bundled, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(descriptor, 'rb') as stream:
+                if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                    raise ValueError('Bundled audio backend is not a regular file')
+                header = stream.read(20)
+                foreign = (len(header) == 20 and header[:6] == b'\x7fELF\x02\x01'
+                           and struct.unpack_from('<H', header, 18)[0] in
+                           {value[1] for value in TARGETS.values()} - {elf_machine})
+                if not foreign:
+                    stream.seek(0)
+                    digest = hashlib.sha256()
+                    for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                        digest.update(chunk)
+                    metadata = json.loads((root/'backend-release.json').read_text())
+                    if not isinstance(metadata, dict) or digest.hexdigest() != metadata.get('sha256'):
+                        raise ValueError('Bundled audio backend checksum mismatch')
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError(f'Cannot verify bundled audio backend: {error}') from error
+        if not foreign:
+            if matches(bundled, target, elf_machine, build_id, tools):
+                return bundled
+            raise ValueError('Bundled audio backend does not match this plugin release')
     base = Path(cache_home or os.environ.get('XDG_CACHE_HOME') or Path.home()/'.cache')
     if not base.is_absolute():
         raise ValueError('XDG_CACHE_HOME must be an absolute path')

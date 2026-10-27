@@ -74,8 +74,27 @@ class NativeBackendTests(unittest.TestCase):
         binary = self.root/'bin/omarchy-audio-service'
         for machine in launcher.TARGETS:
             self.write_binary(binary, machine)
+            (self.root/'backend-release.json').write_text(json.dumps({
+                'sha256': hashlib.sha256(binary.read_bytes()).hexdigest()}))
             with patch.object(launcher.shutil, 'which', return_value=None):
                 self.assertEqual(self.prepare(machine), binary)
+        self.cargo.assert_not_called()
+
+    def test_native_bundle_checksum_mismatch_fails_before_inspection_or_build(self):
+        binary = self.root/'bin/omarchy-audio-service'
+        self.write_binary(binary, 'x86_64')
+        (self.root/'backend-release.json').write_text(json.dumps({'sha256': '0' * 64}))
+        with self.assertRaisesRegex(ValueError, 'checksum mismatch'):
+            self.prepare('x86_64')
+        self.assertNotIn(binary, self.inspected)
+        self.cargo.assert_not_called()
+
+    def test_native_bundle_missing_metadata_fails_before_inspection_or_build(self):
+        binary = self.root/'bin/omarchy-audio-service'
+        self.write_binary(binary, 'x86_64')
+        with self.assertRaisesRegex(ValueError, 'Cannot verify'):
+            self.prepare('x86_64')
+        self.assertNotIn(binary, self.inspected)
         self.cargo.assert_not_called()
 
     def test_foreign_bundle_is_never_executed_and_native_cache_is_reused(self):

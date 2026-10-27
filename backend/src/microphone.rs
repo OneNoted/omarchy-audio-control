@@ -33,7 +33,7 @@ pub async fn run(
     }
     let mut command = Command::new(if record { "pw-record" } else { "pw-play" });
     command.args(["--raw", "--rate=48000", "--channels=1", "--format=s16",
-        "--properties=application.id=ssupt.audio-control node.name=omarchy_audio_test media.name=Microphone-test"])
+        "--properties=application.id=onenoted.audio-control node.name=omarchy_audio_test media.name=Microphone-test"])
         .stderr(Stdio::null()).kill_on_drop(true).process_group(0);
     let parent = std::process::id() as i32;
     // SAFETY: these Linux calls allocate no memory. A daemon crash must stop

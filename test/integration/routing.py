@@ -358,7 +358,7 @@ with tempfile.TemporaryDirectory(prefix='audio-routing-') as temporary, ExitStac
         # Deny the backend metadata writes without changing the private graph.
         objects = json.loads(run('pw-dump'))
         backend_id = next(o['id'] for o in objects if o['type'] == 'PipeWire:Interface:Client'
-            and o.get('info',{}).get('props',{}).get('application.id') == 'ssupt.audio-control')
+            and o.get('info',{}).get('props',{}).get('application.id') == 'onenoted.audio-control')
         metadata_id = next(o['id'] for o in objects if o['type'] == 'PipeWire:Interface:Metadata' and o.get('props',{}).get('metadata.name') == 'default')
         run('pw-cli', 'permissions', str(backend_id), str(metadata_id), '0500')
         rejected('route.set', dict(identity=identity('test_follow'), target=identity('audio_test_output'), mode='override'), {'not_applied'})

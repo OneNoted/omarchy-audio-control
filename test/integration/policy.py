@@ -116,7 +116,7 @@ with tempfile.TemporaryDirectory(prefix='audio-policy-') as temporary, ExitStack
         # the service must restore it and report failure instead of success.
         objects = json.loads(run('pw-dump'))
         backend_client = next(o['id'] for o in objects if o['type'] == 'PipeWire:Interface:Client'
-            and o.get('info', {}).get('props', {}).get('application.id') == 'ssupt.audio-control')
+            and o.get('info', {}).get('props', {}).get('application.id') == 'onenoted.audio-control')
         persistent = next(o['id'] for o in objects if o['type'] == 'PipeWire:Interface:Metadata'
             and o.get('props', {}).get('metadata.name') == 'persistent-sm-settings')
         run('pw-cli', 'permissions', str(backend_client), str(persistent), '0500')

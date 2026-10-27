@@ -1,6 +1,19 @@
-# Advanced Audio Control for Omarchy
+# Notes Audio Control for Omarchy
 
-Advanced Audio Control brings persistent routing, saved setups, and device
+Personal fork of [ssupt/omarchy-audio-control](https://github.com/ssupt/omarchy-audio-control),
+reviewed from upstream commit `c822e48fa3b0d8f3cc2f0bf96eace416f30f0764`.
+The quick review was not a full security or dependency audit.
+
+Fork changes:
+
+- Output mute controls leave microphone mute unchanged.
+- Opening the UI or changing devices never silently caps existing volumes.
+- The launcher verifies the bundled backend checksum before executing it.
+- Release binaries are rebuilt locally from the fork sources.
+
+The original MIT license and upstream credits are retained.
+
+Notes Audio Control brings persistent routing, saved setups, and device
 controls to Omarchy's audio panel.
 
 Choose which output or microphone each application uses, play through several
@@ -15,7 +28,7 @@ devices, or different setups for music and calls.
 
 Compared with the [stock audio panel in Omarchy 4.0.4](https://github.com/omacom/omarchy/blob/c668141e9c42b13c80c9ca4ea108e11708c5e8a5/shell/plugins/panels/audio/Panel.qml):
 
-| Stock panel | Advanced Audio Control adds |
+| Stock panel | Notes Audio Control adds |
 | --- | --- |
 | Output, microphone, and application volume; device selection | A quick mixer plus persistent output and microphone choices for each application |
 | Current device controls | Saved scenes for defaults, volume, balance, ports, and profiles |
@@ -49,7 +62,7 @@ For example:
 | Open mixer | Left-click the audio icon or press `Super+Ctrl+A` |
 | Change output volume | Scroll over the audio icon |
 | Mute microphone | Middle-click the audio icon |
-| Mute all audio | Right-click the audio icon |
+| Mute output | Right-click the audio icon |
 | See microphone users | Hover over the audio icon |
 | Open advanced window | Select the mixer gear |
 
@@ -88,21 +101,21 @@ and reload the plugin. Manual binary replacement after each update is no
 longer needed.
 
 ```bash
-omarchy plugin add https://github.com/ssupt/omarchy-audio-control.git --enable
+omarchy plugin add https://github.com/OneNoted/omarchy-audio-control.git --enable
 ```
 
 Update or remove it:
 
 ```bash
-omarchy plugin update ssupt.audio-control
-omarchy plugin remove ssupt.audio-control
+omarchy plugin update onenoted.audio-control
+omarchy plugin remove onenoted.audio-control
 ```
 
 Disabling or removing the plugin restores Omarchy's built-in audio widget.
 To add **Setup > Audio** to the menu, run:
 
 ```bash
-~/.config/omarchy/plugins/ssupt.audio-control/scripts/audio-menu-entry install
+~/.config/omarchy/plugins/onenoted.audio-control/scripts/audio-menu-entry install
 ```
 
 Use the same helper with `remove` before removing the plugin.

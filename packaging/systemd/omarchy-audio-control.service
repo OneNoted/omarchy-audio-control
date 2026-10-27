@@ -1,6 +1,6 @@
 [Unit]
-Description=Advanced Audio Control backend
-Documentation=https://github.com/ssupt/omarchy-audio-control
+Description=Notes Audio Control backend
+Documentation=https://github.com/OneNoted/omarchy-audio-control
 After=pipewire.service wireplumber.service
 
 [Service]

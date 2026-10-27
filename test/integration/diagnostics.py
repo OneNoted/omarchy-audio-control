@@ -169,7 +169,7 @@ cat >"$AUDIO_DIAGNOSTICS_TEST_DIR/clipboard"
         print('PASS: native formats and graph, shared samples and independent audio controls', flush=True)
         assert control.request('diagnostics.copy') == {'copied': True}
         report = (work/'clipboard').read_text()
-        assert report.startswith('Advanced Audio Control support report')
+        assert report.startswith('Notes Audio Control support report')
         assert 'audio_test_output' not in report and 'audio_test_input' not in report
         assert count() == 1, 'Copy ignored the fresh shared sample'
 

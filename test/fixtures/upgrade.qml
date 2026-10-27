@@ -26,7 +26,7 @@ ShellRoot {
   }
   function load() {
     if (!enabled || client) return
-    var manifest = registry.installedPlugins["ssupt.audio-control"]
+    var manifest = registry.installedPlugins["onenoted.audio-control"]
     if (!manifest) return
     if (!manifest.entryPoints.service) { loadSurfaces(); return }
     var component = Qt.createComponent(registry.entryPointUrl(manifest, "service"))
@@ -36,7 +36,7 @@ ShellRoot {
   }
   function loadSurfaces() {
     if (!enabled || surfaces.length) return
-    var manifest = registry.installedPlugins["ssupt.audio-control"]
+    var manifest = registry.installedPlugins["onenoted.audio-control"]
     if (!manifest || (manifest.entryPoints.service && (!client || !client.ready))) return
     var kinds = ["barWidget", "panel"]
     var created = []
@@ -84,7 +84,7 @@ ShellRoot {
   IpcHandler {
     target: "upgrade"
     function status(): string {
-      var manifest = registry.installedPlugins["ssupt.audio-control"]
+      var manifest = registry.installedPlugins["onenoted.audio-control"]
       return JSON.stringify({ready: root.enabled && root.surfaces.length === 2 && !!manifest &&
           (!manifest.entryPoints.service || (!!root.client && root.client.ready)),
         info: root.client && root.client.client ? root.client.client.info : null,

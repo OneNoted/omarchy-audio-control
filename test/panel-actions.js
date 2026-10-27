@@ -4,6 +4,7 @@ const vm = require('node:vm')
 const Model = require('../qml/core/Model.js')
 
 const source = fs.readFileSync(require.resolve('../qml/panels/Panel.qml'), 'utf8')
+const advancedSource = fs.readFileSync(require.resolve('../qml/panels/AdvancedAudio.qml'), 'utf8')
 function node(id, mediaClass = 'Audio/Sink') {
   return { id, ready: true, audio: { volume: .5, muted: false },
     properties: { 'object.serial': String(id), 'node.name': 'node_' + id, 'media.class': mediaClass } }
@@ -67,7 +68,7 @@ function panel() {
   assert(p.interactionError)
 }
 
-for (const action of ['toggleOutputMute', 'toggleInputMute', 'toggleAllMuted', 'adjustVolume']) {
+for (const action of ['toggleOutputMute', 'toggleInputMute', 'adjustVolume']) {
   const { context: p, levels } = panel()
   p.defaultOutputError = 'Preference was not saved'
   p.audioService.transactionBusy = true
@@ -102,4 +103,34 @@ for (const action of ['toggleOutputMute', 'toggleInputMute', 'toggleAllMuted', '
   assert.equal(requests.length, 0)
 }
 
-console.log('PASS: stale defaults, guarded transactions, retry feedback and persistent failures')
+{
+  const { context: p, output, input, levels } = panel()
+  output.audio.muted = true
+  input.audio.muted = true
+  p.toggleOutputMute()
+  assert.equal(levels.length, 1)
+  assert.equal(levels[0].node, output)
+  assert.equal(levels[0].patch.muted, false)
+  assert.equal(input.audio.muted, true, 'Unmuting output must preserve microphone mute')
+  assert.match(source, /if \(b === Qt\.RightButton\) root\.toggleOutputMute\(\)/)
+  assert.match(source, /onToggled: root\.toggleOutputMute\(\)/)
+  assert.match(source, /else toggleOutputMute\(\)/, 'Keyboard hero action must control output')
+  assert.match(source, /Unmute output/)
+}
+
+{
+  // A loaded mixer must not cap pre-existing output or application levels.
+  // Inspect both surfaces because their QML change handlers run outside this VM harness.
+  for (const qml of [source, advancedSource]) {
+    assert.doesNotMatch(qml, /enforceOutputVolumeLimit/)
+    assert.doesNotMatch(qml, /on(?:OutputOverdrive|CandidateStreams|VolumeSink|OutputDevice|AudioMutationBusy|DirectDeviceMutationBusy)Changed:[^\n]*(?:setOutputVolume|changeNode|setAudioNodeVolume)/)
+  }
+  const { context: p, output, stream, levels } = panel()
+  output.audio.volume = 1.3
+  stream.audio.volume = 1.2
+  assert.equal(levels.length, 0, 'Constructing panel handlers must not write levels')
+  assert.equal(output.audio.volume, 1.3)
+  assert.equal(stream.audio.volume, 1.2)
+}
+
+console.log('PASS: stale defaults, guarded transactions, retry feedback and persistent failures, output-only mute and no passive cap')

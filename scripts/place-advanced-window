@@ -25,7 +25,7 @@ for (( attempt = 0; attempt < 40; attempt++ )); do
   client=$(jq -c '
     if type == "array" then
       [.[-4096:][]
-        | select(.class == "org.quickshell" and .title == "Advanced Audio Control")][-1] // empty
+        | select(.class == "org.quickshell" and .title == "Notes Audio Control")][-1] // empty
     else empty end
   ' <<<"$clients_json") || exit 1
 

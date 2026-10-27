@@ -42,7 +42,7 @@ fn eligible(node: &Node, direction: &str) -> bool {
         && node
             .properties
             .get("application.id")
-            .is_none_or(|id| id != "ssupt.audio-control")
+            .is_none_or(|id| id != "onenoted.audio-control")
         && node
             .properties
             .get("device.class")

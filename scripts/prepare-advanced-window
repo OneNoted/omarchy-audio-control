@@ -12,10 +12,10 @@ set -euo pipefail
 
 timeout 2 hyprctl eval '
   hl.window_rule({
-    name = "ssupt-audio-control",
+    name = "onenoted-audio-control",
     match = {
       class = "^org\\.quickshell$",
-      title = "^Advanced Audio Control$",
+      title = "^Notes Audio Control$",
     },
     float = true,
     center = true,

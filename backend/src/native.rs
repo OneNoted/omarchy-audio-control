@@ -370,8 +370,8 @@ fn session(
     let main_loop = pw::main_loop::MainLoopRc::new(None)?;
     let context = pw::context::ContextRc::new(&main_loop, None)?;
     let core = context.connect_rc(Some(pw::properties::properties! {
-        "application.name" => "Advanced Audio Control",
-        "application.id" => "ssupt.audio-control",
+        "application.name" => "Notes Audio Control",
+        "application.id" => "onenoted.audio-control",
         "media.category" => "Manager"
     }))?;
     let registry = core.get_registry_rc()?;

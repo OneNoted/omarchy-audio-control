@@ -75,7 +75,7 @@ Item {
       : additions.length + " applications started using the microphone: " + additions.join(", ")
     Quickshell.execDetached([
       "notify-send",
-      "--app-name", "Advanced Audio Control",
+      "--app-name", "Notes Audio Control",
       "--icon", "audio-input-microphone-symbolic",
       "--urgency", "normal",
       "--expire-time", "8000",

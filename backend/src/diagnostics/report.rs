@@ -4,14 +4,14 @@ use std::fmt::Write;
 
 pub fn support_report(snapshot: &Value, user: &str, host: &str) -> String {
     let safe = |value: &Value| redact(value.as_str().unwrap_or("unknown"), user, host);
-    let mut text = String::from("Advanced Audio Control support report\n");
+    let mut text = String::from("Notes Audio Control support report\n");
     let _ = writeln!(
         text,
         "Generated: {}\n\nVersions",
         safe(&snapshot["generatedAt"])
     );
     for (key, label) in [
-        ("plugin", "Advanced Audio Control"),
+        ("plugin", "Notes Audio Control"),
         ("pipewire", "PipeWire"),
         ("wireplumber", "WirePlumber"),
     ] {

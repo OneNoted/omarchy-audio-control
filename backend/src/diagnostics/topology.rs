@@ -34,7 +34,7 @@ pub(super) fn routes(graph: &Graph) -> Vec<Value> {
                 n.properties.get("media.class").is_some_and(|v| v == class)
                     && n.properties
                         .get("application.id")
-                        .is_none_or(|v| v != "ssupt.audio-control")
+                        .is_none_or(|v| v != "onenoted.audio-control")
             })
             .take(64)
         {

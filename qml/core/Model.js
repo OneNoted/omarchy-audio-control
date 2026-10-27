@@ -55,7 +55,7 @@ function isInternalAudioNode(name, properties) {
       || value.indexOf("omarchy_speaker_tuning") === 0
       || value.indexOf("omarchy_audio_group_") === 0
       || value.indexOf("output.omarchy_audio_group_") === 0
-      || String(props["application.id"] || "") === "ssupt.audio-control"
+      || String(props["application.id"] || "") === "onenoted.audio-control"
   } catch (e) {
     return false
   }
@@ -497,7 +497,7 @@ function isManagedOutputGroupSink(node) {
     var groupId = name.substring("omarchy_audio_group_".length)
     var properties = nodeProps(node)
     var virtualValue = String(properties["node.virtual"] || "").toLowerCase()
-    return String(properties["application.id"] || "") === "ssupt.audio-control"
+    return String(properties["application.id"] || "") === "onenoted.audio-control"
       && String(properties["omarchy.audio.group.id"] || "") === groupId
       && (virtualValue === "true" || virtualValue === "1")
   } catch (e) {
@@ -517,7 +517,7 @@ function isOutputGroupMemberSink(node) {
       && deviceClass !== "filter" && deviceClass !== "monitor"
       && factoryName.indexOf("null-audio-sink") === -1
       && factoryName.indexOf("filter-chain") === -1
-      && String(properties["application.id"] || "") !== "ssupt.audio-control"
+      && String(properties["application.id"] || "") !== "onenoted.audio-control"
   } catch (e) {
     return false
   }

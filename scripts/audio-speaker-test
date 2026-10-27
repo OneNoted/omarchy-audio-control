@@ -64,6 +64,6 @@ channels=$(jq -er '
 (( channels > 8 )) && channels=8
 
 export PULSE_SINK=$sink_name
-export PULSE_PROP="application.id=ssupt.audio-control application.name='Advanced Audio Control' media.name='Speaker channel test'"
+export PULSE_PROP="application.id=onenoted.audio-control application.name='Notes Audio Control' media.name='Speaker channel test'"
 exec timeout --foreground --kill-after=2 30 \
   "$speaker_path" -D pulse -c "$channels" -t wav -l 1 -S 35
